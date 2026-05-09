@@ -3,7 +3,6 @@ import { stripIdentity } from '@/lib/logic/strip-identity';
 import { pickRegister } from '@/lib/logic/pick-register';
 import { detectShape } from '@/lib/gemini/shape-detector';
 import { extractPitch } from '@/lib/gemini/facet-extractor';
-import { pickFormat } from '@/lib/logic/pick-format';
 import { fetchAndExtract, BlockedHostError } from '@/lib/fetch/url-fetcher';
 import type {
   DataSource,
@@ -96,7 +95,7 @@ export async function POST(req: Request) {
       listenerRole,
     });
 
-    const { facets, edges } = await extractPitch({
+    const { facets } = await extractPitch({
       corpus,
       storytellerRole,
       listenerRole,
@@ -105,8 +104,6 @@ export async function POST(req: Request) {
       outstandingCharacteristic,
     });
 
-    const format = pickFormat(outstandingCharacteristic);
-
     const result: GenerateResult = {
       storytellerRole,
       listenerRole,
@@ -114,9 +111,7 @@ export async function POST(req: Request) {
       archetype,
       outstandingCharacteristic,
       reasoning,
-      format,
       facets,
-      edges,
     };
 
     return NextResponse.json(result);

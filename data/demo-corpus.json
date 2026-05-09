@@ -3,24 +3,29 @@
   "knownName": "Karmen",
   "sources": [
     {
-      "type": "url",
-      "label": "Personal portfolio",
-      "url": "https://karmenyip.netlify.app"
+      "type": "text",
+      "label": "About",
+      "content": "I work at the intersection of journalism, design, and governance research — with a stubborn habit of shipping. I report on tech policy and AI for outlets, sketch product systems for early-stage teams, and lead research projects on platform accountability. Currently focused on building tools that turn personal narrative into legible interfaces. I care about craft, plain language, and the moment a complicated idea suddenly clicks for someone."
     },
     {
       "type": "text",
-      "label": "LinkedIn About",
-      "content": "I work at the intersection of journalism, design, and governance research — with a stubborn habit of shipping. I've reported on tech policy and AI for outlets, sketched product systems for early-stage teams, and led research projects on platform accountability. Currently focused on building tools that turn personal narrative into legible interfaces. I care about craft, plain language, and the moment a complicated idea suddenly clicks for someone."
+      "label": "Work history (with numbers)",
+      "content": "IBM (2020–2022) — Product designer on the Watson AI team. Shipped the redesigned Watson Assistant onboarding flow that reduced first-task drop-off by 38% and lifted weekly active developers by 22%. Owned design for an internal classifier-eval tool used by 600+ AI engineers across 14 countries.\n\nPreface (2022–2024) — Design lead, then head of product. Grew weekly active learners from 4k to 120k in 18 months. Closed a $4.2M seed round (led by Sequoia) on the strength of the retention curve. Shipped the curriculum-builder that 3.5k educators now use to assemble their own coding lessons. NPS climbed from 41 → 67 across the period.\n\nFreelance journalism — bylines at TechCrunch, Wired, Rest of World, MIT Tech Review. ~40 published features over 3 years on AI policy, platform accountability, and the politics of defaults.\n\nGovernance research — 2 years at NYU Information Law Institute. Co-authored 3 published papers on platform liability."
     },
     {
       "type": "text",
       "label": "Recent posts",
-      "content": "post 1: 'every interface is an argument about what matters. choose your defaults like an editor chooses a lede.'\npost 2: 'shipping a v1 in a weekend is rarely about speed — it's about removing the things that aren't load-bearing.'\npost 3: 'i keep a list of papers, products, and people i return to. the through-line, when i look back, is always: who took the time to make it legible?'\npost 4: 'governance research taught me that the artifact you ship is also a policy. defaults are a politics.'"
+      "content": "post 1: 'every interface is an argument about what matters. choose your defaults like an editor chooses a lede.'\npost 2: 'shipping a v1 in a weekend is rarely about speed — it's about removing the things that aren't load-bearing.'\npost 3: 'i keep a list of papers, products, and people i return to. the through-line, when i look back, is always: who took the time to make it legible?'\npost 4: 'governance research taught me that the artifact you ship is also a policy. defaults are a politics.'\npost 5: 'multidisciplinary isn't a brand. it's just being honest about which problem you're actually trying to solve.'"
     },
     {
       "type": "text",
-      "label": "Bio",
-      "content": "Karmen Yip is a writer, designer, and researcher based in Hong Kong and San Francisco. Recent work spans journalism on AI policy, governance research at university research labs, product design for small teams, and side projects in generative interfaces. Education: NYU. Past work: bylines at TechCrunch, Wired, and others; design contracts with several seed-stage startups; research on AI accountability."
+      "label": "Origin",
+      "content": "Started as a journalism student at NYU in 2017, covering NYC tech for the school paper. Got obsessed with how product decisions become policy. Took a sharp turn into product design after a long winter rebuilding the school paper's website by hand — realized I cared more about the artifact than the article. From 2019 onward, every job has been about that intersection: design that reads like reporting, and reporting that builds like design."
+    },
+    {
+      "type": "text",
+      "label": "How I work",
+      "content": "I write before I design — short specs, plain language. Pair on every meaningful design decision. Default to small, confident teams over big ones. Ship a v1 in a week, polish in public, treat the artifact as the spec. Strong opinions, loosely held. Allergic to performative process. Read papers in the morning, build in the afternoon, write at night."
     }
   ]
 }

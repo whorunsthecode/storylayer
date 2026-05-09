@@ -1,6 +1,6 @@
 @import "tailwindcss";
 @import "../styles/registers.css";
-@import "../styles/formats.css";
+@import "../styles/components.css";
 
 :root {
   /* Atmosphere */

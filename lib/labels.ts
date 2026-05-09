@@ -1,7 +1,7 @@
 import type {
   Archetype,
+  ComponentType,
   FacetId,
-  Format,
   ListenerRole,
   OutstandingCharacteristic,
   Register,
@@ -65,17 +65,12 @@ export const OC_LABEL: Record<OutstandingCharacteristic, string> = {
   'quantified-impact': 'quantified impact',
 };
 
-export const FORMAT_LABEL: Record<Format, string> = {
-  'cards-grid': 'cards grid',
+export const COMPONENT_LABEL: Record<ComponentType, string> = {
   'node-graph': 'node graph',
-  magazine: 'magazine',
-  timeline: 'timeline',
-  'portfolio-gallery': 'portfolio gallery',
-  'data-dashboard': 'data dashboard',
-  'map-constellation': 'map constellation',
-  manifesto: 'manifesto',
-  'process-diagram': 'process diagram',
-  conversation: 'conversation',
-  'annotated-cv': 'annotated cv',
-  'network-of-people': 'network of people',
+  'metric-grid': 'metric grid',
+  'timeline-strip': 'timeline strip',
+  'quote-manifesto': 'quote manifesto',
+  'skill-constellation': 'skill constellation',
+  'chapter-spread': 'chapter spread',
+  'facet-card': 'facet card',
 };

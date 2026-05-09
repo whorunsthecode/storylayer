@@ -20,7 +20,7 @@ const PROMPT = ({
   archetype: string;
   outstandingCharacteristic: string;
   focusFacet?: string;
-}) => `You are extracting a structured pitch from a redacted personal-story corpus.
+}) => `You are extracting a structured pitch from a redacted personal-story corpus AND assigning each facet a component type that fits the kind of content it is.
 
 CRITICAL CONSTRAINTS:
 - Do NOT reference or infer demographic attributes (gender, race, ethnicity, nationality, age).
@@ -38,7 +38,7 @@ CONTEXT:
 CORPUS:
 ${corpus}
 
-Extract these facets — only if the corpus contains material to populate them. If a facet has no support in the corpus, OMIT it entirely (do not include with empty content):
+Extract these facets — only if the corpus contains material to populate them. If a facet has no support in the corpus, OMIT it entirely:
 
 - values: core principles they hold non-negotiable
 - formative-experience: the thing that changed their trajectory
@@ -51,14 +51,40 @@ Extract these facets — only if the corpus contains material to populate them. 
 - how-i-work: working style, team dynamics
 - outside-interests: who they are when not working
 
-For each facet:
-- "title" should be a short evocative label (2-5 words), tuned to the visual register and listener role.
-- "content" should be 2-4 sentences, written in voice appropriate to the register, addressed to the listener. Speak about "the Person" or in second-person ("you") if natural — never use a real name.
+PER-FACET COMPONENT ASSIGNMENT
+For EACH facet you include, pick the component type that best fits the kind of content it carries. The principle: different thoughts warrant different containers. Don't default to one type — pick based on the actual material in the corpus.
 
-Then identify edges — connections between facets that are SPECIFIC to this person (not generic). Each edge has from, to, and a short label describing the relationship (e.g., "drives", "shaped", "demonstrates"). Aim for 3-6 edges total.
+The seven component types:
 
-${focusFacet ? `\nFOCUS: Regenerate ONLY the "${focusFacet}" facet with fresh phrasing (still tuned to register + listener). Output a single facet in the facets array, and an empty edges array.\n` : ''}
-Output JSON matching the provided schema.`;
+1. node-graph — choose when the facet has multiple connected entities (e.g. several distinct projects, a network of collaborators, multiple domains that link to each other). Populate "nodes" (3-7 nodes, each with id+label, optional hint) AND "connections" (edges between those nodes with verb-phrase labels like "led to", "shaped", "drives").
+
+2. metric-grid — choose when the facet contains specific numbers (users, revenue, growth %, raise amounts, durations at specific scales). Populate "metrics" (2-5 entries, each with value/label/context). Pull the actual numbers from the corpus — do not invent.
+
+3. timeline-strip — choose for chronological narratives (arc-of-pivots, formative-experience with clear before/after, career progression). Populate "events" (3-6 entries, each with eyebrow/title/content).
+
+4. quote-manifesto — choose when the corpus contains a strong declarative belief (vision, values with a clear stance). Populate "quote" with the strongest single belief sentence (verbatim or near-verbatim from the corpus).
+
+5. skill-constellation — choose for breadth-without-narrative (range, how-i-work as a stack of styles). Populate "skills" (5-12 pills, each with name and weight 1-3 reflecting prominence in the corpus).
+
+6. chapter-spread — choose for a single coherent narrative passage (origin, formative-experience without multiple events). Populate "eyebrow" (a short tag/year), keep title + content.
+
+7. facet-card — DEFAULT, only use when none of the above fit. Just title + content.
+
+For EVERY facet, always populate "title" (2-5 evocative words) and "content" (2-3 sentence prose summary, used as accessible fallback).
+
+GUIDANCE BY FACET ID (suggestions, not rigid rules):
+- values, vision → quote-manifesto if a strong belief exists, else facet-card
+- formative-experience → chapter-spread if one moment, timeline-strip if a sequence
+- origin → chapter-spread
+- shipped-work → metric-grid if numbers exist, else node-graph if multiple distinct projects, else timeline-strip
+- range → skill-constellation OR node-graph (if domains connect)
+- how-i-work → skill-constellation
+- fundraising-track → metric-grid
+- looking-for → facet-card or quote-manifesto
+- outside-interests → skill-constellation or facet-card
+
+${focusFacet ? `\nFOCUS: Regenerate ONLY the "${focusFacet}" facet with fresh phrasing. Output a single facet in the facets array.\n` : ''}
+Output JSON matching the provided schema. Be precise with structured data — empty arrays should be omitted, not included.`;
 
 export async function extractPitch(args: {
   corpus: string;

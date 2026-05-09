@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type {
+  ComponentType,
   DataSource,
   Facet,
   GenerateResult,
@@ -15,15 +16,23 @@ import {
   REGISTER_LABEL,
   ARCHETYPE_LABEL,
   OC_LABEL,
-  FORMAT_LABEL,
   FACET_LABELS,
 } from '@/lib/labels';
-import { getStubReason } from '@/lib/logic/pick-format';
 
 interface DemoData {
   knownName?: string;
   sources: DataSource[];
 }
+
+const COMPONENT_LABEL: Record<ComponentType, string> = {
+  'node-graph': 'node graph',
+  'metric-grid': 'metric grid',
+  'timeline-strip': 'timeline strip',
+  'quote-manifesto': 'quote manifesto',
+  'skill-constellation': 'skill constellation',
+  'chapter-spread': 'chapter spread',
+  'facet-card': 'facet card',
+};
 
 export function Workspace() {
   const [storytellerRole, setStorytellerRole] = useState<StorytellerRole>('applicant');
@@ -40,20 +49,14 @@ export function Workspace() {
   const [sharing, setSharing] = useState(false);
 
   const previewRegister = pickRegister(storytellerRole, listenerRole);
-
   const canGenerate = sources.length > 0 && !loading;
-
-  const stubReason = useMemo(
-    () => (result ? getStubReason(result.outstandingCharacteristic) : null),
-    [result]
-  );
 
   const addSource = (type: 'url' | 'text') => {
     setSources((prev) => [
       ...prev,
       type === 'url'
         ? { type: 'url', label: 'Personal URL', url: '' }
-        : { type: 'text', label: 'LinkedIn About', content: '' },
+        : { type: 'text', label: 'About', content: '' },
     ]);
   };
 
@@ -89,8 +92,8 @@ export function Workspace() {
       'stripping identity (name → "the Person", pronouns neutralised)',
       'fetching URLs and aggregating corpus',
       'Layer 2 · detecting archetype + outstanding characteristic',
-      'Layer 3 · extracting facets and edges',
-      'Layer 5 · picking output format from the strength',
+      'Layer 3 · extracting facets and assigning component types',
+      'preparing the workspace manifest',
     ];
     let stageIdx = 0;
     setProgress(stages[0]);
@@ -173,10 +176,8 @@ export function Workspace() {
         register: result.register,
         archetype: result.archetype,
         outstandingCharacteristic: result.outstandingCharacteristic,
-        format: result.format,
         reasoning: result.reasoning,
         facets: editedFacets,
-        edges: result.edges,
       };
       const res = await fetch('/api/share', {
         method: 'POST',
@@ -219,7 +220,7 @@ export function Workspace() {
           Tell your story <em>through who&rsquo;s listening.</em>
         </h1>
         <div className="hero-sub">
-          Five layers · agent picks register, archetype, format · viewer picks facets
+          register from the relationship · archetype from the corpus · component per facet · viewer picks what to see
         </div>
       </div>
 
@@ -297,13 +298,9 @@ export function Workspace() {
         {sources.length === 0 ? (
           <div className="empty-state">
             <span className="empty-state-text">
-              no sources yet — paste a URL or your LinkedIn About
+              no sources yet — paste a URL or your About text
             </span>
-            <button
-              className="add-source-btn"
-              onClick={() => addSource('text')}
-              type="button"
-            >
+            <button className="add-source-btn" onClick={() => addSource('text')} type="button">
               + add source
             </button>
           </div>
@@ -362,18 +359,10 @@ export function Workspace() {
               ))}
             </div>
             <div className="add-source-row">
-              <button
-                className="secondary-btn"
-                type="button"
-                onClick={() => addSource('url')}
-              >
+              <button className="secondary-btn" type="button" onClick={() => addSource('url')}>
                 + URL
               </button>
-              <button
-                className="secondary-btn"
-                type="button"
-                onClick={() => addSource('text')}
-              >
+              <button className="secondary-btn" type="button" onClick={() => addSource('text')}>
                 + Text
               </button>
               <input
@@ -405,73 +394,74 @@ export function Workspace() {
       </div>
 
       {loading && progress && (
-        <div
-          className="agent-peek"
-          style={{ marginTop: 16, opacity: 0.85 }}
-        >
+        <div className="agent-peek" style={{ marginTop: 16, opacity: 0.85 }}>
           <div className="agent-peek-label">working</div>
-          <div
-            style={{
-              fontFamily: 'var(--body-font)',
-              fontSize: 14,
-              color: 'var(--ink-soft)',
-            }}
-          >
+          <div style={{ fontFamily: 'var(--body-font)', fontSize: 14, color: 'var(--ink-soft)' }}>
             {progress}
           </div>
         </div>
       )}
 
-      {error && <div className="error-banner" style={{ whiteSpace: 'pre-wrap' }}>{error}</div>}
+      {error && (
+        <div className="error-banner" style={{ whiteSpace: 'pre-wrap' }}>
+          {error}
+        </div>
+      )}
 
-      {/* AGENT PEEK */}
+      {/* AGENT RATIONALE */}
       {result && (
         <div className="agent-peek">
           <div className="agent-peek-label">Agent rationale</div>
           <div className="agent-peek-title">
-            Picked the <em>{FORMAT_LABEL[result.format]}</em> format.
+            Reading your story as <em>{ARCHETYPE_LABEL[result.archetype]}</em>.
           </div>
           <div className="agent-peek-detail">{result.reasoning}</div>
           <div className="agent-peek-meta">
             <span>
-              <span className="agent-peek-meta-key">register</span>&nbsp;{' '}
-              {REGISTER_LABEL[result.register]}
+              <span className="agent-peek-meta-key">register</span>&nbsp; {REGISTER_LABEL[result.register]}
             </span>
             <span>
-              <span className="agent-peek-meta-key">archetype</span>&nbsp;{' '}
-              {ARCHETYPE_LABEL[result.archetype]}
+              <span className="agent-peek-meta-key">archetype</span>&nbsp; {ARCHETYPE_LABEL[result.archetype]}
             </span>
             <span>
-              <span className="agent-peek-meta-key">outstanding</span>&nbsp;{' '}
-              {OC_LABEL[result.outstandingCharacteristic]}
-            </span>
-            <span>
-              <span className="agent-peek-meta-key">format</span>&nbsp;{' '}
-              {FORMAT_LABEL[result.format]}
+              <span className="agent-peek-meta-key">outstanding</span>&nbsp; {OC_LABEL[result.outstandingCharacteristic]}
             </span>
           </div>
-          {stubReason && (
-            <div
-              style={{
-                marginTop: 12,
-                fontFamily: 'var(--mono-font)',
-                fontSize: 11,
-                color: 'var(--muted)',
-              }}
-            >
-              agent considered <strong>{FORMAT_LABEL[stubReason.ideal]}</strong> · falling back to{' '}
-              <strong>{FORMAT_LABEL[stubReason.fallback]}</strong> for v1
-            </div>
-          )}
         </div>
       )}
 
-      {/* FACET CARDS */}
+      {/* COMPONENT MANIFEST — shows the per-facet decisions before previewing */}
       {result && editedFacets.length > 0 && (
         <section className="section" style={{ marginTop: 24 }}>
           <div className="section-head">
             <div className="section-num-and-title">
               <span className="section-num">03 /</span>
+              <h2 className="section-title">
+                Manifest — <em>component per facet</em>
+              </h2>
+            </div>
+          </div>
+          <div className="manifest-list">
+            {editedFacets.map((f) => (
+              <div key={f.id} className="manifest-row">
+                <div className="manifest-facet">{FACET_LABELS[f.id]}</div>
+                <div className="manifest-arrow">→</div>
+                <div className="manifest-component">{COMPONENT_LABEL[f.componentType]}</div>
+                <div className="manifest-detail">
+                  {summarizeStructured(f)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* FACET CARDS — editing surface */}
+      {result && editedFacets.length > 0 && (
+        <section className="section" style={{ marginTop: 24 }}>
+          <div className="section-head">
+            <div className="section-num-and-title">
+              <span className="section-num">04 /</span>
               <h2 className="section-title">
                 Facets — <em>edit inline · regenerate per card</em>
               </h2>
@@ -481,7 +471,9 @@ export function Workspace() {
           <div className="facet-cards">
             {editedFacets.map((f) => (
               <article key={f.id} className="facet-card">
-                <div className="facet-card-id">{FACET_LABELS[f.id]}</div>
+                <div className="facet-card-id">
+                  {FACET_LABELS[f.id]} · <span style={{ color: 'var(--accent)' }}>{COMPONENT_LABEL[f.componentType]}</span>
+                </div>
                 <input
                   className="facet-card-title"
                   value={f.title}
@@ -522,7 +514,7 @@ export function Workspace() {
                 ready to share
               </div>
               <div style={{ fontFamily: 'var(--display-font)', fontSize: 18, marginTop: 4 }}>
-                {editedFacets.length} facets · {result.edges.length} edges · {FORMAT_LABEL[result.format]}
+                {editedFacets.length} facets · {new Set(editedFacets.map((f) => f.componentType)).size} component types
               </div>
             </div>
             {shareUrl ? (
@@ -530,17 +522,16 @@ export function Workspace() {
                 <a className="share-link" href={shareUrl} target="_blank" rel="noreferrer">
                   {shareUrl}
                 </a>
-                <button className="add-source-btn" onClick={() => navigator.clipboard.writeText(shareUrl)} type="button">
+                <button
+                  className="add-source-btn"
+                  onClick={() => navigator.clipboard.writeText(shareUrl)}
+                  type="button"
+                >
                   Copy link
                 </button>
               </>
             ) : (
-              <button
-                className="generate-btn"
-                onClick={share}
-                disabled={sharing}
-                type="button"
-              >
+              <button className="generate-btn" onClick={share} disabled={sharing} type="button">
                 {sharing ? 'Sharing…' : 'Share →'}
               </button>
             )}
@@ -549,12 +540,31 @@ export function Workspace() {
       )}
 
       <footer className="footer">
-        <span>pitch.workspace · v0.1</span>
+        <span>pitch.workspace · v0.2</span>
         <span>
-          <span className="footer-accent">●</span>&nbsp; identity-stripped · 5-layer logic ·
+          <span className="footer-accent">●</span>&nbsp; identity-stripped · component per facet ·
           gemini 2.5
         </span>
       </footer>
     </div>
   );
+}
+
+function summarizeStructured(f: Facet): string {
+  switch (f.componentType) {
+    case 'metric-grid':
+      return f.metrics?.length ? `${f.metrics.length} metrics` : 'no metrics returned';
+    case 'timeline-strip':
+      return f.events?.length ? `${f.events.length} events` : 'no events returned';
+    case 'node-graph':
+      return f.nodes?.length ? `${f.nodes.length} nodes · ${f.connections?.length ?? 0} connections` : 'no graph returned';
+    case 'skill-constellation':
+      return f.skills?.length ? `${f.skills.length} pills` : 'no skills returned';
+    case 'quote-manifesto':
+      return f.quote ? 'quote pulled from corpus' : 'using content fallback';
+    case 'chapter-spread':
+      return f.eyebrow ? `eyebrow "${f.eyebrow}"` : 'editorial spread';
+    case 'facet-card':
+      return 'plain card';
+  }
 }
