@@ -392,6 +392,76 @@ body::before {
 }
 .generate-btn-arrow { font-family: var(--mono-font); font-weight: 400; font-size: 16px; }
 
+/* AGENT RATIONALE — 4 decisions panel */
+.agent-rationale {
+  margin-top: 36px;
+  padding: 24px 28px;
+  background: var(--glass-fill);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--glass-edge-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 16px;
+  box-shadow: var(--glass-shadow);
+}
+.agent-rationale-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 14px;
+}
+.agent-rationale-label {
+  font-family: var(--mono-font);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--accent);
+}
+.agent-rationale-count {
+  font-family: var(--mono-font);
+  font-size: 10px; color: var(--muted); letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.decision-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column;
+}
+.decision-row {
+  display: grid;
+  grid-template-columns: 90px 180px 1fr 92px;
+  gap: 14px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-top: 1px dashed rgba(28, 48, 110, 0.1);
+}
+.decision-row:first-child { border-top: none; }
+.decision-label {
+  font-family: var(--mono-font);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--muted-light);
+}
+.decision-value {
+  font-family: var(--display-font);
+  font-weight: 500; color: var(--ink);
+  font-size: 15px;
+  letter-spacing: -0.005em;
+}
+.decision-reason {
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+  line-height: 1.45;
+}
+.decision-source {
+  font-family: var(--mono-font);
+  font-size: 9px;
+  color: var(--muted-light);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: right;
+}
+
+@media (max-width: 720px) {
+  .decision-row { grid-template-columns: 1fr; gap: 4px; }
+  .decision-source { text-align: left; }
+}
+
 /* AGENT PEEK */
 .agent-peek {
   margin-top: 36px; padding: 28px 32px;

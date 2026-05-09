@@ -114,7 +114,8 @@ export interface Pitch {
   register: Register;
   archetype: Archetype;
   outstandingCharacteristic: OutstandingCharacteristic;
-  reasoning: string;
+  archetypeReasoning: string;
+  characteristicReasoning: string;
   facets: Facet[];
   createdAt: string;
 }

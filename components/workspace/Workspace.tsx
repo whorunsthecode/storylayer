@@ -14,10 +14,9 @@ import {
   STORYTELLER_OPTIONS,
   LISTENER_OPTIONS,
   REGISTER_LABEL,
-  ARCHETYPE_LABEL,
-  OC_LABEL,
   FACET_LABELS,
 } from '@/lib/labels';
+import { AgentRationale } from './AgentRationale';
 
 interface DemoData {
   knownName?: string;
@@ -176,7 +175,8 @@ export function Workspace() {
         register: result.register,
         archetype: result.archetype,
         outstandingCharacteristic: result.outstandingCharacteristic,
-        reasoning: result.reasoning,
+        archetypeReasoning: result.archetypeReasoning,
+        characteristicReasoning: result.characteristicReasoning,
         facets: editedFacets,
       };
       const res = await fetch('/api/share', {
@@ -408,27 +408,8 @@ export function Workspace() {
         </div>
       )}
 
-      {/* AGENT RATIONALE */}
-      {result && (
-        <div className="agent-peek">
-          <div className="agent-peek-label">Agent rationale</div>
-          <div className="agent-peek-title">
-            Reading your story as <em>{ARCHETYPE_LABEL[result.archetype]}</em>.
-          </div>
-          <div className="agent-peek-detail">{result.reasoning}</div>
-          <div className="agent-peek-meta">
-            <span>
-              <span className="agent-peek-meta-key">register</span>&nbsp; {REGISTER_LABEL[result.register]}
-            </span>
-            <span>
-              <span className="agent-peek-meta-key">archetype</span>&nbsp; {ARCHETYPE_LABEL[result.archetype]}
-            </span>
-            <span>
-              <span className="agent-peek-meta-key">outstanding</span>&nbsp; {OC_LABEL[result.outstandingCharacteristic]}
-            </span>
-          </div>
-        </div>
-      )}
+      {/* AGENT RATIONALE — 4 decisions surfaced */}
+      {result && <AgentRationale pitch={result} facets={editedFacets} />}
 
       {/* COMPONENT MANIFEST — shows the per-facet decisions before previewing */}
       {result && editedFacets.length > 0 && (

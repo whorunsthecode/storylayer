@@ -89,11 +89,12 @@ export async function POST(req: Request) {
   try {
     const register = pickRegister(storytellerRole, listenerRole);
 
-    const { archetype, outstandingCharacteristic, reasoning } = await detectShape({
-      corpus,
-      storytellerRole,
-      listenerRole,
-    });
+    const { archetype, outstandingCharacteristic, archetypeReasoning, characteristicReasoning } =
+      await detectShape({
+        corpus,
+        storytellerRole,
+        listenerRole,
+      });
 
     const { facets } = await extractPitch({
       corpus,
@@ -110,7 +111,8 @@ export async function POST(req: Request) {
       register,
       archetype,
       outstandingCharacteristic,
-      reasoning,
+      archetypeReasoning,
+      characteristicReasoning,
       facets,
     };
 

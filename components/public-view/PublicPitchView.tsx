@@ -120,7 +120,7 @@ export function PublicPitchView({ pitch }: { pitch: Pitch }) {
         </div>
 
         <div className="pv-agent-badge">
-          outstanding: <strong>{OC_LABEL[pitch.outstandingCharacteristic]}</strong> &nbsp;·&nbsp; {pitch.reasoning}
+          outstanding: <strong>{OC_LABEL[pitch.outstandingCharacteristic]}</strong> &nbsp;·&nbsp; {pitch.characteristicReasoning}
         </div>
 
         {visible.length === 0 ? (

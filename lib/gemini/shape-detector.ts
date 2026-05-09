@@ -50,7 +50,11 @@ OUTSTANDING CHARACTERISTIC OPTIONS (pick exactly one):
 CORPUS:
 ${corpus}
 
-Output JSON matching the provided schema. For "outstandingCharacteristic", choose what would matter MOST to the listener role given their context. The same corpus may have a different outstanding characteristic for different listeners — that is intentional. The "reasoning" field should be one short sentence (max 30 words) explaining why this archetype + outstanding-characteristic was chosen, written in second person addressing the storyteller.`;
+Output JSON matching the provided schema. For "outstandingCharacteristic", choose what would matter MOST to the listener role given their context. The same corpus may have a different outstanding characteristic for different listeners — that is intentional.
+
+Provide TWO separate reasoning fields:
+- "archetypeReasoning": one short sentence (max 30 words) on why this archetype fits the corpus, in second person addressing the storyteller. Focus on the *shape* of the career — connections, progression, range.
+- "characteristicReasoning": one short sentence (max 30 words) on why this characteristic is foregrounded *for this specific listener role*. Make explicit what this listener cares about that makes this characteristic stand out. A different listener might foreground a different one — say so when relevant.`;
 
 export async function detectShape(args: {
   corpus: string;
