@@ -72,7 +72,15 @@ The seven component types:
 
 7. facet-card — DEFAULT, only use when none of the above fit. Just title + content.
 
-For EVERY facet, always populate "title" (2-5 evocative words) and "content" (2-3 sentence prose summary, used as accessible fallback).
+For EVERY facet, always populate "title" (2-5 evocative words), "content" (2-3 sentence prose summary, used as accessible fallback), and the LAYOUT COMPOSITION fields below.
+
+LAYOUT COMPOSITION — assign these per facet:
+
+- "weight": Pick exactly ONE facet as "hero" — the strongest single statement of who this storyteller is *for this listener*. Pick 2-3 facets as "feature" — the supporting pillars that flesh out the hero. The rest are "supporting". The reactive reveal surfaces facets in weight order (hero first), so hero must stand alone.
+
+- "span": "full" or "half". Hero is always "full". node-graph, timeline-strip, and quote-manifesto are always "full" regardless of weight. metric-grid is "full" if hero or feature, "half" otherwise. facet-card, chapter-spread, skill-constellation default to "half" unless they're hero.
+
+- "emphasis": ONE word from this facet's content that the eye should land on first. Prefer a number ("120k", "$4.2M"), a name ("Preface", "Watson"), or a strong verb ("ship", "translate", "compound"). Skip if no single word stands out.
 
 GUIDANCE BY FACET ID (suggestions, not rigid rules):
 - values, vision → quote-manifesto if a strong belief exists, else facet-card

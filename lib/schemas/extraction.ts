@@ -57,6 +57,14 @@ export const FacetSchema = z.object({
   title: z.string(),
   content: z.string().describe('plain prose, used as fallback or accessible text'),
   componentType: ComponentTypeEnum,
+  weight: z.enum(['hero', 'feature', 'supporting']).describe(
+    'editorial priority: hero (exactly one per pitch), feature (2-3), supporting (rest)'
+  ),
+  span: z.enum(['full', 'half']).describe('grid span'),
+  emphasis: z
+    .string()
+    .optional()
+    .describe('one word the eye should land on first — number, name, or verb'),
   metrics: z.array(MetricSchema).optional(),
   events: z.array(TimelineEventSchema).optional(),
   nodes: z.array(GraphNodeSchema).optional(),

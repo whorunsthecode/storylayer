@@ -9,7 +9,6 @@
   },
   "dependencies": {
     "@copilotkit/react-core": "^1.57.1",
-    "@copilotkit/react-ui": "^1.57.1",
     "@copilotkit/runtime": "^1.57.1",
     "@google/genai": "^2.0.1",
     "@mozilla/readability": "^0.6.0",

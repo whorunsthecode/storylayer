@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useCopilotAction, useCopilotReadable } from '@copilotkit/react-core';
 import type {
   ComponentType,
   DataSource,
   Facet,
-  FacetId,
   GenerateResult,
   ListenerRole,
   StorytellerRole,
@@ -162,72 +160,6 @@ export function Workspace() {
     }
   };
 
-  // Expose pitch state to the copilot sidebar
-  useCopilotReadable({
-    description:
-      'The full current pitch — register, archetype, outstanding characteristic, and the editable facets with their assigned component types',
-    value: result
-      ? {
-          relationship: `${storytellerRole} → ${listenerRole}`,
-          register: result.register,
-          archetype: result.archetype,
-          outstandingCharacteristic: result.outstandingCharacteristic,
-          archetypeReasoning: result.archetypeReasoning,
-          characteristicReasoning: result.characteristicReasoning,
-          facets: editedFacets.map((f) => ({
-            id: f.id,
-            title: f.title,
-            content: f.content,
-            componentType: f.componentType,
-          })),
-        }
-      : null,
-  });
-
-  // Expose the per-facet regenerate action — chat triggers this with a facetId + hint
-  useCopilotAction({
-    name: 'regenerate_facet',
-    description:
-      'Rewrite one specific facet card with optional rewrite guidance. Use this when the user asks to change, sharpen, soften, or reframe any facet.',
-    parameters: [
-      {
-        name: 'facetId',
-        type: 'string',
-        description: 'Which facet to rewrite. Must match an existing facet id from the readable pitch state.',
-        enum: [
-          'values',
-          'formative-experience',
-          'origin',
-          'shipped-work',
-          'range',
-          'vision',
-          'fundraising-track',
-          'looking-for',
-          'how-i-work',
-          'outside-interests',
-        ],
-        required: true,
-      },
-      {
-        name: 'hint',
-        type: 'string',
-        description:
-          'Plain-English guidance on how to rewrite — what to emphasise, what tone, what to add or remove.',
-        required: false,
-      },
-    ],
-    handler: async ({ facetId, hint }: { facetId: string; hint?: string }) => {
-      if (!result) return 'No pitch loaded yet — generate one first.';
-      const exists = editedFacets.find((f) => f.id === facetId);
-      if (!exists) {
-        return `No "${facetId}" facet exists in this pitch. Available: ${editedFacets
-          .map((f) => f.id)
-          .join(', ')}.`;
-      }
-      await regenerateFacet(facetId as FacetId, hint);
-      return `Rewrote ${facetId}.${hint ? ` Applied hint: "${hint}".` : ''}`;
-    },
-  });
 
   const updateFacet = (id: string, patch: Partial<Facet>) => {
     setEditedFacets((prev) =>
@@ -498,9 +430,16 @@ export function Workspace() {
                 <div className="manifest-facet">{FACET_LABELS[f.id]}</div>
                 <div className="manifest-arrow">→</div>
                 <div className="manifest-component">{COMPONENT_LABEL[f.componentType]}</div>
-                <div className="manifest-detail">
-                  {summarizeStructured(f)}
+                <div className="manifest-badges">
+                  <span className={`badge badge-weight badge-${f.weight ?? 'supporting'}`}>
+                    {f.weight ?? 'supporting'}
+                  </span>
+                  <span className="badge badge-span">{f.span ?? 'half'}</span>
+                  {f.emphasis && (
+                    <span className="badge badge-emphasis">↗ {f.emphasis}</span>
+                  )}
                 </div>
+                <div className="manifest-detail">{summarizeStructured(f)}</div>
               </div>
             ))}
           </div>

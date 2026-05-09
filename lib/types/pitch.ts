@@ -85,11 +85,28 @@ export interface SkillPill {
   weight: number;       // 1 = small/faded, 3 = large/full opacity
 }
 
+/**
+ * Layout composition fields — agent-assigned per facet.
+ *
+ *   weight: editorial priority. Exactly ONE hero per pitch; 2-3 features; rest supporting.
+ *           The reactive reveal surfaces facets in this order (hero first).
+ *   span:   grid span. 'full' takes the whole row; 'half' pairs with another half.
+ *           Some component types (node-graph, timeline-strip, quote-manifesto)
+ *           always render full regardless.
+ *   emphasis: a single word — usually a number, name, or verb — that the eye
+ *             should land on first. Drives a subtle highlight in the facet header.
+ */
+export type Weight = 'hero' | 'feature' | 'supporting';
+export type Span = 'full' | 'half';
+
 export interface Facet {
   id: FacetId;
   title: string;
   content: string;                // always populated — used as fallback / accessible text
   componentType: ComponentType;
+  weight: Weight;
+  span: Span;
+  emphasis?: string;
   // Optional, populated based on componentType:
   metrics?: Metric[];             // metric-grid
   events?: TimelineEvent[];       // timeline-strip

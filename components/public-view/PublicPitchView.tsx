@@ -1,13 +1,11 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import type { Pitch, FacetId, Facet } from '@/lib/types/pitch';
-import {
-  REGISTER_LABEL,
-  ARCHETYPE_LABEL,
-  OC_LABEL,
-  FACET_LABELS,
-} from '@/lib/labels';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CopilotKit, useCopilotReadable } from '@copilotkit/react-core';
+import type { Pitch, Facet } from '@/lib/types/pitch';
+import { REGISTER_LABEL, ARCHETYPE_LABEL, OC_LABEL, FACET_LABELS } from '@/lib/labels';
+import type { PullAction, PullResponse } from '@/lib/schemas/pull';
+import { PullActions } from './PullActions';
 import { FacetCardComponent } from './components/FacetCard';
 import { ChapterSpread } from './components/ChapterSpread';
 import { QuoteManifesto } from './components/QuoteManifesto';
@@ -16,16 +14,247 @@ import { TimelineStrip } from './components/TimelineStrip';
 import { SkillConstellation } from './components/SkillConstellation';
 import { NodeGraphFacet } from './components/NodeGraphFacet';
 
-const MIN_PICKS = 2;
-const MAX_PICKS = 4;
+interface PullThread {
+  id: string;
+  action: PullAction;
+  loading: boolean;
+  facet?: Facet; // populated when the agent returns; same shape as a Facet so render code is shared
+  error?: string;
+}
 
-// Components that take the full content width (no grid pairing).
-const FULL_WIDTH: ReadonlySet<Facet['componentType']> = new Set([
-  'node-graph',
-  'quote-manifesto',
-  'metric-grid',
-  'timeline-strip',
-]);
+const REVEAL_INTERVAL_MS = 5000;
+
+export function PublicPitchView({ pitch }: { pitch: Pitch }) {
+  return (
+    <CopilotKit runtimeUrl="/api/copilotkit">
+      <ListenerView pitch={pitch} />
+    </CopilotKit>
+  );
+}
+
+function ListenerView({ pitch }: { pitch: Pitch }) {
+  // Sort facets by weight: hero → feature → supporting
+  const orderedFacets = useMemo(() => {
+    const order: Record<string, number> = { hero: 0, feature: 1, supporting: 2 };
+    return [...pitch.facets].sort(
+      (a, b) => (order[a.weight ?? 'supporting'] ?? 9) - (order[b.weight ?? 'supporting'] ?? 9)
+    );
+  }, [pitch.facets]);
+
+  const totalLayers = orderedFacets.length;
+  const [revealed, setRevealed] = useState(1); // start with hero only
+  const dwellRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Pull-thread state, keyed by originating facet id
+  const [threads, setThreads] = useState<Record<string, PullThread[]>>({});
+  const [anyBusy, setAnyBusy] = useState(false);
+
+  // Expose the listener's current state to CopilotKit's runtime so the protocol is engaged
+  useCopilotReadable({
+    description:
+      'The listener-view state of a Storylayer pitch. Tracks which facets are currently revealed and any pull-thread components that the listener has gestured into.',
+    value: {
+      pitchId: pitch.id,
+      relationship: `${pitch.storytellerRole} → ${pitch.listenerRole}`,
+      register: pitch.register,
+      archetype: pitch.archetype,
+      outstandingCharacteristic: pitch.outstandingCharacteristic,
+      revealedFacetIds: orderedFacets.slice(0, revealed).map((f) => f.id),
+      remainingLayers: Math.max(totalLayers - revealed, 0),
+      threadCounts: Object.fromEntries(
+        Object.entries(threads).map(([k, v]) => [k, v.length])
+      ),
+    },
+  });
+
+  // Auto-reveal next layer every REVEAL_INTERVAL_MS until all surfaced
+  useEffect(() => {
+    if (revealed >= totalLayers) return;
+    if (dwellRef.current) clearTimeout(dwellRef.current);
+    dwellRef.current = setTimeout(() => {
+      setRevealed((r) => Math.min(r + 1, totalLayers));
+    }, REVEAL_INTERVAL_MS);
+    return () => {
+      if (dwellRef.current) clearTimeout(dwellRef.current);
+    };
+  }, [revealed, totalLayers]);
+
+  const revealNext = useCallback(() => {
+    if (dwellRef.current) clearTimeout(dwellRef.current);
+    setRevealed((r) => Math.min(r + 1, totalLayers));
+  }, [totalLayers]);
+
+  const handlePull = useCallback(
+    async (facetId: string, action: PullAction) => {
+      const threadId = `${facetId}-${action}-${Date.now()}`;
+      setAnyBusy(true);
+      setThreads((prev) => ({
+        ...prev,
+        [facetId]: [...(prev[facetId] ?? []), { id: threadId, action, loading: true }],
+      }));
+      try {
+        const res = await fetch('/api/pull', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ pitchId: pitch.id, facetId, action }),
+        });
+        const data = (await res.json()) as { component?: PullResponse; error?: string };
+        if (!res.ok || !data.component) {
+          throw new Error(data.error ?? `HTTP ${res.status}`);
+        }
+        // Promote PullResponse to Facet shape for rendering reuse
+        const threadFacet: Facet = {
+          id: facetId as Facet['id'],
+          title: data.component.title,
+          content: data.component.content,
+          componentType: data.component.componentType,
+          weight: 'supporting',
+          span: 'full',
+          emphasis: data.component.emphasis,
+          metrics: data.component.metrics,
+          events: data.component.events,
+          nodes: data.component.nodes,
+          connections: data.component.connections,
+          skills: data.component.skills,
+          quote: data.component.quote,
+          eyebrow: data.component.eyebrow,
+        };
+        setThreads((prev) => ({
+          ...prev,
+          [facetId]: (prev[facetId] ?? []).map((t) =>
+            t.id === threadId ? { ...t, loading: false, facet: threadFacet } : t
+          ),
+        }));
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : 'Pull failed';
+        setThreads((prev) => ({
+          ...prev,
+          [facetId]: (prev[facetId] ?? []).map((t) =>
+            t.id === threadId ? { ...t, loading: false, error: msg } : t
+          ),
+        }));
+      } finally {
+        setAnyBusy(false);
+      }
+    },
+    [pitch.id]
+  );
+
+  const visible = orderedFacets.slice(0, revealed);
+  const progressPct = Math.round((revealed / Math.max(totalLayers, 1)) * 100);
+  const allRevealed = revealed >= totalLayers;
+
+  return (
+    <div className={`register-${pitch.register}`}>
+      <div className="pv-shell pv-listener">
+        <header className="pv-sticky-header">
+          <div className="pv-header-row">
+            <div className="pv-brand">
+              Pitch <em>·</em> {pitch.storytellerRole} → {pitch.listenerRole}
+            </div>
+            <div className="pv-meta">
+              <span><span className="pv-meta-key">register</span>&nbsp; {REGISTER_LABEL[pitch.register]}</span>
+              <span><span className="pv-meta-key">archetype</span>&nbsp; {ARCHETYPE_LABEL[pitch.archetype]}</span>
+              <span><span className="pv-meta-key">standout</span>&nbsp; {OC_LABEL[pitch.outstandingCharacteristic]}</span>
+            </div>
+          </div>
+          <div className="pv-progress" aria-hidden>
+            <div className="pv-progress-fill" style={{ width: `${progressPct}%` }} />
+          </div>
+        </header>
+
+        <div className="pv-flow">
+          {visible.map((f) => (
+            <FacetWithPulls
+              key={f.id}
+              facet={f}
+              threads={threads[f.id] ?? []}
+              busyAny={anyBusy}
+              onPull={(action) => handlePull(f.id, action)}
+            />
+          ))}
+        </div>
+
+        <div className="pv-reveal-bar">
+          {allRevealed ? (
+            <span className="pv-reveal-done">
+              ✦ Full story revealed — pull any facet to go deeper
+            </span>
+          ) : (
+            <button type="button" className="pv-reveal-btn" onClick={revealNext}>
+              Show me more <span className="pv-reveal-arrow">→</span>
+              <span className="pv-reveal-count">
+                {revealed} / {totalLayers}
+              </span>
+            </button>
+          )}
+        </div>
+
+        <footer className="footer" style={{ marginTop: 64 }}>
+          <span>same link · different listener · different story</span>
+          <span>
+            <span className="footer-accent">●</span>&nbsp; identity-stripped · agent composes ·
+            CopilotKit runtime
+          </span>
+        </footer>
+      </div>
+    </div>
+  );
+}
+
+function FacetWithPulls({
+  facet,
+  threads,
+  busyAny,
+  onPull,
+}: {
+  facet: Facet;
+  threads: PullThread[];
+  busyAny: boolean;
+  onPull: (action: PullAction) => void;
+}) {
+  const isFullSpan = facet.span === 'full' || facet.weight === 'hero';
+  const busyAction = threads.find((t) => t.loading)?.action ?? null;
+
+  return (
+    <section
+      className={`pv-row ${isFullSpan ? 'pv-row-full' : 'pv-row-half'}`}
+      data-weight={facet.weight}
+    >
+      <div className="pv-facet-block">
+        {facet.weight === 'hero' && (
+          <div className="pv-hero-eyebrow">
+            <span className="pv-hero-tag">hero · {FACET_LABELS[facet.id]}</span>
+            {facet.emphasis && (
+              <span className="pv-hero-emphasis">↗ {facet.emphasis}</span>
+            )}
+          </div>
+        )}
+        {renderFacet(facet)}
+        <PullActions facetId={facet.id} busyAction={busyAction} anyBusy={busyAny} onPull={onPull} />
+        {threads.length > 0 && (
+          <div className="pv-thread-stack">
+            {threads.map((t) => (
+              <div key={t.id} className="pv-thread">
+                <div className="pv-thread-line" />
+                <div className="pv-thread-eyebrow">
+                  <span className="pv-thread-action">↳ {labelForAction(t.action)}</span>
+                </div>
+                {t.loading && (
+                  <div className="pv-thread-loading">agent is composing the thread…</div>
+                )}
+                {t.error && (
+                  <div className="pv-thread-error">pull failed: {t.error}</div>
+                )}
+                {t.facet && renderFacet(t.facet)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 function renderFacet(facet: Facet) {
   switch (facet.componentType) {
@@ -47,175 +276,11 @@ function renderFacet(facet: Facet) {
   }
 }
 
-export function PublicPitchView({ pitch }: { pitch: Pitch }) {
-  const [selected, setSelected] = useState<FacetId[] | null>(null);
-
-  const availableFacetIds = useMemo(
-    () => pitch.facets.map((f) => f.id),
-    [pitch]
-  );
-
-  if (selected === null) {
-    return <Onboarding pitch={pitch} onConfirm={setSelected} />;
-  }
-
-  const selectedSet = new Set(selected);
-  const visible = pitch.facets.filter((f) => selectedSet.has(f.id));
-
-  // Group consecutive small (non-full-width) facets into rows; full-width breaks rows.
-  const rows: { type: 'full' | 'pair'; facets: Facet[] }[] = [];
-  let pair: Facet[] = [];
-  const flushPair = () => {
-    if (pair.length > 0) {
-      rows.push({ type: 'pair', facets: pair });
-      pair = [];
-    }
-  };
-  for (const f of visible) {
-    if (FULL_WIDTH.has(f.componentType)) {
-      flushPair();
-      rows.push({ type: 'full', facets: [f] });
-    } else {
-      pair.push(f);
-      if (pair.length === 2) flushPair();
-    }
-  }
-  flushPair();
-
-  return (
-    <div className={`register-${pitch.register}`}>
-      <div className="pv-shell">
-        <header className="pv-header">
-          <div className="pv-brand">
-            Pitch <em>·</em> {pitch.storytellerRole} → {pitch.listenerRole}
-          </div>
-          <div className="pv-meta">
-            <span><span className="pv-meta-key">register</span>&nbsp; {REGISTER_LABEL[pitch.register]}</span>
-            <span><span className="pv-meta-key">archetype</span>&nbsp; {ARCHETYPE_LABEL[pitch.archetype]}</span>
-            <span><span className="pv-meta-key">outstanding</span>&nbsp; {OC_LABEL[pitch.outstandingCharacteristic]}</span>
-          </div>
-        </header>
-
-        <div className="pv-toggle-bar">
-          <span className="pv-toggle-label">facets</span>
-          {availableFacetIds.map((id) => {
-            const active = selected.includes(id);
-            return (
-              <button
-                key={id}
-                className={`pv-chip ${active ? 'active' : ''}`}
-                type="button"
-                onClick={() => {
-                  setSelected((prev) =>
-                    prev!.includes(id)
-                      ? prev!.filter((x) => x !== id)
-                      : [...prev!, id]
-                  );
-                }}
-              >
-                {FACET_LABELS[id]}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="pv-agent-badge">
-          outstanding: <strong>{OC_LABEL[pitch.outstandingCharacteristic]}</strong> &nbsp;·&nbsp; {pitch.characteristicReasoning}
-        </div>
-
-        {visible.length === 0 ? (
-          <div className="pv-empty-pick">pick a few facets above to see the pitch</div>
-        ) : (
-          <div className="pv-flow">
-            {rows.map((row, i) =>
-              row.type === 'full' ? (
-                <div key={i} className="pv-row pv-row-full">
-                  {renderFacet(row.facets[0])}
-                </div>
-              ) : (
-                <div key={i} className="pv-row pv-row-pair">
-                  {row.facets.map((f) => (
-                    <div key={f.id} className="pv-row-cell">
-                      {renderFacet(f)}
-                    </div>
-                  ))}
-                </div>
-              )
-            )}
-          </div>
-        )}
-
-        <footer className="footer" style={{ marginTop: 64 }}>
-          <span>same link · different listener · different page</span>
-          <span>
-            <span className="footer-accent">●</span>&nbsp; identity-stripped · agent assembles components per facet
-          </span>
-        </footer>
-      </div>
-    </div>
-  );
-}
-
-function Onboarding({
-  pitch,
-  onConfirm,
-}: {
-  pitch: Pitch;
-  onConfirm: (ids: FacetId[]) => void;
-}) {
-  const [picks, setPicks] = useState<FacetId[]>([]);
-  const toggle = (id: FacetId) => {
-    setPicks((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : prev.length < MAX_PICKS
-          ? [...prev, id]
-          : prev
-    );
-  };
-  const canConfirm = picks.length >= MIN_PICKS && picks.length <= MAX_PICKS;
-
-  return (
-    <div className={`register-${pitch.register}`}>
-      <div className="pv-onboarding">
-        <div className="pv-onboarding-eyebrow">
-          a pitch shaped for you · {pitch.storytellerRole} → {pitch.listenerRole}
-        </div>
-        <h1 className="pv-onboarding-title">What do you want to know?</h1>
-        <p className="pv-onboarding-sub">
-          Pick {MIN_PICKS}–{MAX_PICKS} facets. The agent has already assembled each one
-          into the component type that fits the content best.
-        </p>
-        <div className="pv-facet-options">
-          {pitch.facets.map((f) => {
-            const active = picks.includes(f.id);
-            return (
-              <button
-                key={f.id}
-                type="button"
-                className={`pv-chip ${active ? 'active' : ''}`}
-                onClick={() => toggle(f.id)}
-              >
-                {FACET_LABELS[f.id]}
-                <span className="pv-chip-meta">· {f.componentType}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="pv-facet-confirm">
-          <span className="pv-facet-counter">
-            {picks.length} / {MAX_PICKS} selected
-          </span>
-          <button
-            type="button"
-            className="generate-btn"
-            disabled={!canConfirm}
-            onClick={() => onConfirm(picks)}
-          >
-            See the pitch <span className="generate-btn-arrow">→</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+function labelForAction(a: PullAction): string {
+  return {
+    'dig-deeper': 'Dig deeper',
+    'show-proof': 'Show proof',
+    'what-made-this': 'What made this',
+    'connect-it': 'Connect it',
+  }[a];
 }
