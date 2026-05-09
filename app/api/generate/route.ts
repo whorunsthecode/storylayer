@@ -4,7 +4,7 @@ import { pickRegister } from '@/lib/logic/pick-register';
 import { detectShape } from '@/lib/gemini/shape-detector';
 import { extractPitch } from '@/lib/gemini/facet-extractor';
 import { pickFormat } from '@/lib/logic/pick-format';
-import { fetchAndExtract } from '@/lib/fetch/url-fetcher';
+import { fetchAndExtract, BlockedHostError } from '@/lib/fetch/url-fetcher';
 import type {
   DataSource,
   GenerateResult,
@@ -45,14 +45,6 @@ export async function POST(req: Request) {
           sourceDiagnostics.push({ label: s.label, ok: false, reason: 'empty URL' });
           continue;
         }
-        if (/(?:^|\.)(linkedin|twitter|x|facebook|instagram)\.com/i.test(s.url)) {
-          sourceDiagnostics.push({
-            label: s.label,
-            ok: false,
-            reason: `${new URL(s.url).hostname} blocks scraping — paste the text into a Text source instead`,
-          });
-          continue;
-        }
         const text = await fetchAndExtract(s.url);
         const trimmed = text.trim();
         if (!trimmed) {
@@ -71,7 +63,12 @@ export async function POST(req: Request) {
         sourceDiagnostics.push({ label: s.label, ok: true, chars: trimmed.length });
       }
     } catch (err) {
-      const reason = err instanceof Error ? err.message : 'unknown error';
+      const reason =
+        err instanceof BlockedHostError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'unknown error';
       console.warn('source fetch failed', s.label, reason);
       sourceDiagnostics.push({ label: s.label, ok: false, reason });
     }

@@ -14,14 +14,24 @@ const IDEAL_MAP: Record<OutstandingCharacteristic, Format> = {
   'quantified-impact': 'data-dashboard',
 };
 
+// Stubbed formats fall back to one of the 4 built formats. Each fallback is
+// chosen to preserve the *spirit* of the ideal format:
+//   portfolio-gallery → timeline   (chronology of shipped work)
+//   data-dashboard    → magazine   (numbers as pull-quotes / headlines)
+//   process-diagram   → node-graph (process as connected nodes)
+//   map-constellation → node-graph (constellation = nodes in space)
+//   manifesto         → magazine   (declarative single-page in editorial type)
+//   annotated-cv      → magazine   (structured editorial with marginalia)
+//   conversation      → magazine   (Q&A in editorial layout)
+//   network-of-people → node-graph (social graph = node graph)
 const FALLBACK: Partial<Record<Format, Format>> = {
-  'manifesto': 'magazine',
-  'annotated-cv': 'magazine',
-  'portfolio-gallery': 'cards-grid',
-  'data-dashboard': 'cards-grid',
+  'portfolio-gallery': 'timeline',
+  'data-dashboard':    'magazine',
+  'process-diagram':   'node-graph',
   'map-constellation': 'node-graph',
-  'process-diagram': 'cards-grid',
-  'conversation': 'magazine',
+  'manifesto':         'magazine',
+  'annotated-cv':      'magazine',
+  'conversation':      'magazine',
   'network-of-people': 'node-graph',
 };
 
