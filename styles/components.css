@@ -85,18 +85,18 @@
 
 /* quote-manifesto */
 .cmp-manifesto {
-  padding: 32px 32px 32px 36px;
-  border-left: 4px solid var(--reg-accent, var(--accent));
+  padding: 26px 28px;
+  border-left: 3px solid var(--reg-accent, var(--accent));
 }
 .cmp-manifesto-quote {
   font-family: var(--reg-display, var(--display-font));
   font-style: italic;
   font-weight: 400;
   font-size: 30px;
-  line-height: 1.2;
+  line-height: 1.1;
   letter-spacing: -0.015em;
   color: var(--ink);
-  margin: 6px 0 14px;
+  margin: 6px 0 0;
   max-width: 760px;
 }
 .cmp-manifesto-quote::before {
@@ -112,10 +112,15 @@
   font-style: normal;
 }
 .cmp-manifesto-caption {
+  margin-top: 14px;
   font-family: var(--reg-body, var(--body-font));
-  font-size: 14px;
+  font-size: 13px;
   color: var(--muted);
   max-width: 600px;
+}
+
+@media (max-width: 720px) {
+  .cmp-manifesto-quote { font-size: 22px; }
 }
 
 /* metric-grid */
