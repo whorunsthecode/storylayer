@@ -108,7 +108,7 @@ export async function extractPitch(args: {
 }): Promise<Extraction> {
   const ai = getAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
+    model: 'gemini-2.5-flash-lite',
     contents: PROMPT(args),
     config: {
       responseMimeType: 'application/json',

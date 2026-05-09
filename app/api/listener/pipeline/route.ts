@@ -121,7 +121,7 @@ Begin. Use the find_evidence_in_corpus tool freely to ground your decisions befo
 
         const ai = getAI();
         const chat = ai.chats.create({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-2.5-flash-lite',
           config: {
             tools: [findEvidenceTool],
             toolConfig: {

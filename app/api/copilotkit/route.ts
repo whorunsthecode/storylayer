@@ -9,7 +9,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 300;
 
 const serviceAdapter = new GoogleGenerativeAIAdapter({
-  model: 'gemini-2.5-flash',
+  model: 'gemini-2.5-flash-lite',
 });
 
 const copilotRuntime = new CopilotRuntime();
