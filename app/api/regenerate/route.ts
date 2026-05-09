@@ -24,6 +24,7 @@ interface Body {
   archetype: Archetype;
   outstandingCharacteristic: OutstandingCharacteristic;
   focusFacet: FacetId;
+  hint?: string;
   knownName?: string;
 }
 
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
       archetype: body.archetype,
       outstandingCharacteristic: body.outstandingCharacteristic,
       focusFacet: body.focusFacet,
+      hint: body.hint,
     });
 
     const facet: Facet | undefined = facets.find((f) => f.id === body.focusFacet) ?? facets[0];

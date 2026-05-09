@@ -12,6 +12,7 @@ const PROMPT = ({
   archetype,
   outstandingCharacteristic,
   focusFacet,
+  hint,
 }: {
   corpus: string;
   storytellerRole: string;
@@ -20,6 +21,7 @@ const PROMPT = ({
   archetype: string;
   outstandingCharacteristic: string;
   focusFacet?: string;
+  hint?: string;
 }) => `You are extracting a structured pitch from a redacted personal-story corpus AND assigning each facet a component type that fits the kind of content it is.
 
 CRITICAL CONSTRAINTS:
@@ -83,7 +85,7 @@ GUIDANCE BY FACET ID (suggestions, not rigid rules):
 - looking-for → facet-card or quote-manifesto
 - outside-interests → skill-constellation or facet-card
 
-${focusFacet ? `\nFOCUS: Regenerate ONLY the "${focusFacet}" facet with fresh phrasing. Output a single facet in the facets array.\n` : ''}
+${focusFacet ? `\nFOCUS: Regenerate ONLY the "${focusFacet}" facet with fresh phrasing. Output a single facet in the facets array.\n` : ''}${hint ? `\nUSER GUIDANCE FOR THIS REWRITE: "${hint}"\nApply this guidance literally — sharpen, soften, reframe, add the specific angle, drop what they don't want. Their guidance overrides defaults but never overrides the safeguards above.\n` : ''}
 Output JSON matching the provided schema. Be precise with structured data — empty arrays should be omitted, not included.`;
 
 export async function extractPitch(args: {
@@ -94,6 +96,7 @@ export async function extractPitch(args: {
   archetype: string;
   outstandingCharacteristic: string;
   focusFacet?: string;
+  hint?: string;
 }): Promise<Extraction> {
   const ai = getAI();
   const response = await ai.models.generateContent({
