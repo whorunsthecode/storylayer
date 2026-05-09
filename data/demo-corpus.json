@@ -1,0 +1,26 @@
+{
+  "label": "Karmen Yip · demo",
+  "knownName": "Karmen",
+  "sources": [
+    {
+      "type": "url",
+      "label": "Personal portfolio",
+      "url": "https://karmenyip.netlify.app"
+    },
+    {
+      "type": "text",
+      "label": "LinkedIn About",
+      "content": "I work at the intersection of journalism, design, and governance research — with a stubborn habit of shipping. I've reported on tech policy and AI for outlets, sketched product systems for early-stage teams, and led research projects on platform accountability. Currently focused on building tools that turn personal narrative into legible interfaces. I care about craft, plain language, and the moment a complicated idea suddenly clicks for someone."
+    },
+    {
+      "type": "text",
+      "label": "Recent posts",
+      "content": "post 1: 'every interface is an argument about what matters. choose your defaults like an editor chooses a lede.'\npost 2: 'shipping a v1 in a weekend is rarely about speed — it's about removing the things that aren't load-bearing.'\npost 3: 'i keep a list of papers, products, and people i return to. the through-line, when i look back, is always: who took the time to make it legible?'\npost 4: 'governance research taught me that the artifact you ship is also a policy. defaults are a politics.'"
+    },
+    {
+      "type": "text",
+      "label": "Bio",
+      "content": "Karmen Yip is a writer, designer, and researcher based in Hong Kong and San Francisco. Recent work spans journalism on AI policy, governance research at university research labs, product design for small teams, and side projects in generative interfaces. Education: NYU. Past work: bylines at TechCrunch, Wired, and others; design contracts with several seed-stage startups; research on AI accountability."
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+/* Both registers tint the global glass system. They DON'T replace it. */
+
+.register-builder-led {
+  --reg-glass-fill: rgba(255, 255, 255, 0.55);
+  --reg-glass-edge: rgba(255, 255, 255, 0.45);
+  --reg-accent: #3B5BFF;
+  --reg-accent-soft: rgba(59, 91, 255, 0.12);
+  --reg-display: var(--font-bricolage);
+  --reg-body: var(--font-geist);
+  --reg-mono: var(--font-geist-mono);
+  --reg-density-pad: 18px;
+}
+
+.register-vision-led {
+  --reg-glass-fill: rgba(252, 245, 230, 0.55);
+  --reg-glass-edge: rgba(255, 240, 210, 0.55);
+  --reg-accent: #C9A14A;
+  --reg-accent-soft: rgba(201, 161, 74, 0.14);
+  --reg-display: var(--font-fraunces);
+  --reg-body: var(--font-newsreader);
+  --reg-mono: var(--font-geist-mono);
+  --reg-density-pad: 28px;
+}
+
+/* Stub registers fall back gracefully */
+.register-trust-led,
+.register-mission-led,
+.register-chemistry-led {
+  --reg-glass-fill: rgba(255, 255, 255, 0.55);
+  --reg-glass-edge: rgba(255, 255, 255, 0.45);
+  --reg-accent: #3B5BFF;
+  --reg-display: var(--font-bricolage);
+  --reg-body: var(--font-geist);
+  --reg-mono: var(--font-geist-mono);
+  --reg-density-pad: 18px;
+}
+
+/* Apply register tokens onto register surfaces.
+   The register CLASS sits on the public-view container; descendants inherit. */
+[class*="register-"] {
+  font-family: var(--reg-body);
+  color: var(--ink);
+}
+
+[class*="register-"] .glass {
+  background: var(--reg-glass-fill);
+  border-color: var(--reg-glass-edge);
+}
+
+/* PUBLIC VIEW SHELL */
+.pv-shell {
+  position: relative; z-index: 2;
+  max-width: 1080px; margin: 0 auto;
+  padding: 36px 32px 80px;
+}
+.pv-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px;
+  background: var(--reg-glass-fill, var(--glass-fill));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  border-radius: 16px;
+  padding: 14px 20px;
+  box-shadow: var(--glass-shadow);
+}
+.pv-brand {
+  display: flex; align-items: baseline; gap: 8px;
+  font-family: var(--reg-display, var(--display-font));
+  font-size: 18px; font-weight: 500;
+  color: var(--ink);
+}
+.pv-brand em {
+  font-style: italic; color: var(--reg-accent, var(--accent));
+  font-weight: 400;
+}
+.pv-meta {
+  display: flex; gap: 16px; flex-wrap: wrap;
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.12em;
+}
+.pv-meta-key { color: var(--muted-light); }
+
+.pv-toggle-bar {
+  margin: 18px 0 28px;
+  padding: 14px 18px;
+  background: var(--reg-glass-fill, var(--glass-fill));
+  border: 1px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+}
+.pv-toggle-label {
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.14em;
+  margin-right: 6px;
+}
+.pv-chip {
+  padding: 6px 12px; border-radius: 999px;
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 11px;
+  border: 1px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  background: rgba(255,255,255,0.4);
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+  transition: all 0.16s ease;
+}
+.pv-chip:hover { color: var(--reg-accent, var(--accent)); border-color: var(--reg-accent, var(--accent)); }
+.pv-chip.active {
+  background: var(--reg-accent-soft, var(--accent-soft));
+  color: var(--reg-accent, var(--accent-deep));
+  border-color: var(--reg-accent, var(--accent));
+}
+
+/* ONBOARDING MODAL */
+.pv-onboarding {
+  position: relative; z-index: 2;
+  max-width: 640px; margin: 80px auto;
+  padding: 40px 36px;
+  background: var(--reg-glass-fill, var(--glass-fill));
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  border-radius: 20px;
+  box-shadow: var(--glass-shadow-deep);
+}
+.pv-onboarding-eyebrow {
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 10px; color: var(--reg-accent, var(--accent));
+  text-transform: uppercase; letter-spacing: 0.16em;
+  margin-bottom: 14px;
+}
+.pv-onboarding-title {
+  font-family: var(--reg-display, var(--display-font));
+  font-size: 32px; font-weight: 500; line-height: 1.15;
+  letter-spacing: -0.02em; color: var(--ink);
+  margin-bottom: 12px;
+}
+.pv-onboarding-sub {
+  font-family: var(--reg-body, var(--body-font));
+  font-size: 14px; color: var(--muted);
+  margin-bottom: 24px;
+}
+.pv-facet-options {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 24px;
+}
+.pv-facet-confirm {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 16px; flex-wrap: wrap;
+}
+.pv-facet-counter {
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+/* AGENT BADGE on public view */
+.pv-agent-badge {
+  margin-bottom: 18px; padding: 14px 18px;
+  background: var(--reg-glass-fill, var(--glass-fill));
+  border: 1px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  border-left: 3px solid var(--reg-accent, var(--accent));
+  border-radius: 14px;
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 11px;
+  color: var(--ink-soft);
+  letter-spacing: 0.04em;
+}
+.pv-agent-badge strong {
+  color: var(--reg-accent, var(--accent));
+  font-weight: 500;
+}
