@@ -134,6 +134,9 @@ export interface Pitch {
   archetypeReasoning: string;
   characteristicReasoning: string;
   facets: Facet[];
+  // Identity-stripped corpus, persisted so listener-side endpoints (intent + pipeline)
+  // can search it without re-fetching the original sources.
+  redactedCorpus: string;
   createdAt: string;
 }
 

@@ -1,3 +1,171 @@
+/* THINKING TRACE — live AG-UI-shape event stream */
+.thinking-trace {
+  margin: 0 0 24px;
+  padding: 18px 22px;
+  background: var(--reg-glass-fill, var(--glass-fill));
+  border: 1px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  border-left: 3px solid var(--reg-accent, var(--accent));
+  border-radius: 14px;
+  font-family: var(--reg-mono, var(--mono-font));
+}
+.trace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.trace-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--reg-accent, var(--accent));
+  font-weight: 500;
+}
+.trace-pulse {
+  color: var(--reg-accent, var(--accent));
+  animation: tracePulse 1s ease-in-out infinite;
+  font-size: 10px;
+}
+@keyframes tracePulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+.trace-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.trace-item {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  opacity: 0;
+  animation: traceFadeIn 0.3s forwards;
+}
+@keyframes traceFadeIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.trace-marker {
+  color: var(--reg-accent, var(--accent));
+  flex-shrink: 0;
+  font-size: 11px;
+}
+.trace-text { color: var(--ink-soft); }
+.trace-text code {
+  background: var(--reg-accent-soft, var(--accent-soft));
+  color: var(--reg-accent, var(--accent-deep));
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+}
+.trace-text strong { color: var(--ink); font-weight: 500; }
+.trace-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 2px;
+  font-style: italic;
+}
+.trace-tool-call .trace-marker { color: #7B6BFF; }
+.trace-tool-result .trace-marker { color: #5DD3A5; }
+.trace-relevance {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.trace-relevance-high {
+  background: rgba(93, 211, 165, 0.2);
+  color: #2D8266;
+}
+.trace-relevance-medium {
+  background: rgba(255, 214, 107, 0.3);
+  color: #8C6B14;
+}
+.trace-relevance-low {
+  background: rgba(28, 48, 110, 0.1);
+  color: var(--muted);
+}
+.trace-relevance-none {
+  background: rgba(201, 72, 58, 0.15);
+  color: #8B2F2F;
+}
+.trace-error .trace-marker { color: #C9483A; }
+
+/* PIPELINE STAGE — full-page during streaming */
+.pv-pipeline-stage {
+  min-height: 70vh;
+  padding-top: 48px;
+}
+.pv-pipeline-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 16px; flex-wrap: wrap; margin-bottom: 22px;
+}
+.pv-pipeline-eyebrow {
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--reg-accent, var(--accent));
+}
+.pv-trace-wrap { position: relative; margin-bottom: 18px; }
+.pv-trace-toggle {
+  display: inline-flex;
+  align-items: center;
+  background: transparent;
+  border: 1px dashed var(--reg-glass-edge, var(--glass-edge-soft));
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  cursor: pointer;
+  margin: 4px 0 18px;
+}
+.pv-trace-toggle:hover {
+  border-style: solid;
+  border-color: var(--reg-accent, var(--accent));
+  color: var(--reg-accent, var(--accent));
+}
+.pv-trace-show { display: inline-flex; }
+
+/* EVIDENCE QUOTES under each facet */
+.facet-evidence {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(28, 48, 110, 0.15);
+}
+.facet-evidence-label {
+  font-family: var(--reg-mono, var(--mono-font));
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--reg-accent, var(--accent));
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+.facet-evidence-quote {
+  font-family: var(--reg-body, var(--body-font));
+  font-size: 13px;
+  color: var(--muted);
+  font-style: italic;
+  padding-left: 12px;
+  border-left: 2px solid var(--reg-glass-edge, var(--glass-edge-soft));
+  margin: 6px 0;
+  line-height: 1.55;
+}
+
 /* INTENT ONBOARDING — agent asks the listener what they want to learn */
 .intent-overlay {
   position: relative; z-index: 5;

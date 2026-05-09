@@ -8,7 +8,9 @@ import type { PullAction, PullResponse } from '@/lib/schemas/pull';
 import { PullActions } from './PullActions';
 import { IntentOnboarding } from './IntentOnboarding';
 import { ListenerRationale } from './ListenerRationale';
+import { ThinkingTrace } from './ThinkingTrace';
 import { RemixBar } from './RemixBar';
+import { useIntentPipeline } from '@/lib/hooks/useIntentPipeline';
 import { FacetCardComponent } from './components/FacetCard';
 import { ChapterSpread } from './components/ChapterSpread';
 import { QuoteManifesto } from './components/QuoteManifesto';
@@ -25,11 +27,6 @@ interface PullThread {
   error?: string;
 }
 
-interface Resolution {
-  selected: FacetId[];
-  reasoning: string;
-}
-
 const REVEAL_INTERVAL_MS = 5000;
 
 export function PublicPitchView({ pitch }: { pitch: Pitch }) {
@@ -41,39 +38,84 @@ export function PublicPitchView({ pitch }: { pitch: Pitch }) {
 }
 
 function ListenerRoot({ pitch }: { pitch: Pitch }) {
-  const [resolution, setResolution] = useState<Resolution | null>(null);
+  const { events, result, running, error, run } = useIntentPipeline(pitch.id);
+  const [phase, setPhase] = useState<'intent' | 'pipeline' | 'rendered'>('intent');
 
-  if (!resolution) {
+  const handleIntent = (text: string) => {
+    setPhase('pipeline');
+    run(text).then(() => setPhase('rendered'));
+  };
+
+  if (phase === 'intent') {
+    return <IntentOnboarding pitch={pitch} onSubmit={handleIntent} externalError={null} />;
+  }
+
+  if (phase === 'pipeline' || (running && !result)) {
     return (
-      <IntentOnboarding
-        pitch={pitch}
-        onResolve={(selected, reasoning) => setResolution({ selected, reasoning })}
-      />
+      <div className={`register-${pitch.register}`}>
+        <div className="pv-shell pv-pipeline-stage">
+          <div className="pv-pipeline-header">
+            <div className="pv-brand">
+              Pitch <em>·</em> {pitch.storytellerRole} → {pitch.listenerRole}
+            </div>
+            <span className="pv-pipeline-eyebrow">agent at work · live trace below</span>
+          </div>
+          <ThinkingTrace events={events} running={running} />
+          {error && <div className="error-banner" style={{ marginTop: 18 }}>{error}</div>}
+        </div>
+      </div>
+    );
+  }
+
+  if (!result) {
+    return (
+      <div className={`register-${pitch.register}`}>
+        <div className="pv-shell">
+          <div className="error-banner">{error ?? 'pipeline returned no result'}</div>
+          <button
+            type="button"
+            className="secondary-btn"
+            onClick={() => setPhase('intent')}
+            style={{ marginTop: 16 }}
+          >
+            Try again →
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
     <ListenerView
       pitch={pitch}
-      resolution={resolution}
-      setResolution={setResolution}
+      result={result}
+      events={events}
+      onRemix={async (text) => {
+        setPhase('pipeline');
+        await run(text);
+        setPhase('rendered');
+      }}
+      remixing={running}
     />
   );
 }
 
 function ListenerView({
   pitch,
-  resolution,
-  setResolution,
+  result,
+  events,
+  onRemix,
+  remixing,
 }: {
   pitch: Pitch;
-  resolution: Resolution;
-  setResolution: (r: Resolution) => void;
+  result: { selectedFacetIds: string[]; reasoning: string; evidence: Record<string, string[]> };
+  events: ReturnType<typeof useIntentPipeline>['events'];
+  onRemix: (text: string) => Promise<void>;
+  remixing: boolean;
 }) {
-  // Filter to listener-picked facets, then sort by weight (hero → feature → supporting).
   const orderedFacets = useMemo(() => {
     const order: Record<string, number> = { hero: 0, feature: 1, supporting: 2 };
-    const picked = new Set(resolution.selected);
+    const picked = new Set(result.selectedFacetIds);
     return pitch.facets
       .filter((f) => picked.has(f.id))
       .sort(
@@ -81,33 +123,37 @@ function ListenerView({
           (order[a.weight ?? 'supporting'] ?? 9) -
           (order[b.weight ?? 'supporting'] ?? 9)
       );
-  }, [pitch.facets, resolution.selected]);
+  }, [pitch.facets, result.selectedFacetIds]);
 
   const totalLayers = orderedFacets.length;
-  const [revealed, setRevealed] = useState(1); // hero (or top of selection) shows first
+  const [revealed, setRevealed] = useState(1);
   const dwellRef = useRef<NodeJS.Timeout | null>(null);
 
   const [threads, setThreads] = useState<Record<string, PullThread[]>>({});
   const [anyBusy, setAnyBusy] = useState(false);
-  const [remixing, setRemixing] = useState(false);
+  const [traceCollapsed, setTraceCollapsed] = useState(false);
 
-  // Reset reveal when the resolution changes (remix)
+  // Reset reveal on resolution change
   useEffect(() => {
     setRevealed(1);
     setThreads({});
-  }, [resolution]);
+    setTraceCollapsed(false);
+  }, [result]);
 
   useCopilotReadable({
     description:
-      'The listener-view state of a Storylayer pitch. Tracks the listener intent, agent-picked facets, current reveal, and any pull-thread components.',
+      'The listener-view state of a Storylayer pitch. Tracks the listener intent, agent-picked facets with evidence, current reveal, and any pull-thread components.',
     value: {
       pitchId: pitch.id,
       relationship: `${pitch.storytellerRole} → ${pitch.listenerRole}`,
       register: pitch.register,
       archetype: pitch.archetype,
       outstandingCharacteristic: pitch.outstandingCharacteristic,
-      listenerReasoning: resolution.reasoning,
-      pickedFacetIds: resolution.selected,
+      listenerReasoning: result.reasoning,
+      pickedFacetIds: result.selectedFacetIds,
+      evidenceCounts: Object.fromEntries(
+        Object.entries(result.evidence).map(([k, v]) => [k, v.length])
+      ),
       revealedFacetIds: orderedFacets.slice(0, revealed).map((f) => f.id),
       remainingLayers: Math.max(totalLayers - revealed, 0),
       threadCounts: Object.fromEntries(
@@ -187,37 +233,10 @@ function ListenerView({
     [pitch.id]
   );
 
-  const remix = useCallback(
-    async (text: string) => {
-      setRemixing(true);
-      try {
-        const res = await fetch('/api/listener/intent', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            pitchId: pitch.id,
-            intent: text,
-            previousReasoning: resolution.reasoning,
-          }),
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-        setResolution({
-          selected: data.selectedFacetIds as FacetId[],
-          reasoning: data.reasoning as string,
-        });
-      } catch (err) {
-        console.error('remix failed', err);
-      } finally {
-        setRemixing(false);
-      }
-    },
-    [pitch.id, resolution.reasoning, setResolution]
-  );
-
   const visible = orderedFacets.slice(0, revealed);
   const progressPct = Math.round((revealed / Math.max(totalLayers, 1)) * 100);
   const allRevealed = revealed >= totalLayers;
+  const selected = result.selectedFacetIds as FacetId[];
 
   return (
     <div className={`register-${pitch.register}`}>
@@ -228,15 +247,9 @@ function ListenerView({
               Pitch <em>·</em> {pitch.storytellerRole} → {pitch.listenerRole}
             </div>
             <div className="pv-meta">
-              <span>
-                <span className="pv-meta-key">register</span>&nbsp; {REGISTER_LABEL[pitch.register]}
-              </span>
-              <span>
-                <span className="pv-meta-key">archetype</span>&nbsp; {ARCHETYPE_LABEL[pitch.archetype]}
-              </span>
-              <span>
-                <span className="pv-meta-key">standout</span>&nbsp; {OC_LABEL[pitch.outstandingCharacteristic]}
-              </span>
+              <span><span className="pv-meta-key">register</span>&nbsp; {REGISTER_LABEL[pitch.register]}</span>
+              <span><span className="pv-meta-key">archetype</span>&nbsp; {ARCHETYPE_LABEL[pitch.archetype]}</span>
+              <span><span className="pv-meta-key">standout</span>&nbsp; {OC_LABEL[pitch.outstandingCharacteristic]}</span>
             </div>
           </div>
           <div className="pv-progress" aria-hidden>
@@ -245,16 +258,39 @@ function ListenerView({
         </header>
 
         <ListenerRationale
-          reasoning={resolution.reasoning}
-          selected={resolution.selected}
+          reasoning={result.reasoning}
+          selected={selected}
           totalAvailable={pitch.facets.length}
         />
+
+        {!traceCollapsed && events.length > 0 && (
+          <div className="pv-trace-wrap">
+            <ThinkingTrace events={events} running={false} />
+            <button
+              type="button"
+              className="pv-trace-toggle"
+              onClick={() => setTraceCollapsed(true)}
+            >
+              hide trace
+            </button>
+          </div>
+        )}
+        {traceCollapsed && (
+          <button
+            type="button"
+            className="pv-trace-toggle pv-trace-show"
+            onClick={() => setTraceCollapsed(false)}
+          >
+            ↳ show agent pipeline
+          </button>
+        )}
 
         <div className="pv-flow">
           {visible.map((f) => (
             <FacetWithPulls
               key={f.id}
               facet={f}
+              evidence={result.evidence[f.id] ?? []}
               threads={threads[f.id] ?? []}
               busyAny={anyBusy}
               onPull={(action) => handlePull(f.id, action)}
@@ -277,13 +313,13 @@ function ListenerView({
           )}
         </div>
 
-        <RemixBar busy={remixing} onRemix={remix} />
+        <RemixBar busy={remixing} onRemix={onRemix} />
 
         <footer className="footer" style={{ marginTop: 64 }}>
           <span>same link · different listener · different page</span>
           <span>
-            <span className="footer-accent">●</span>&nbsp; identity-stripped · agent renders at view
-            time · CopilotKit runtime
+            <span className="footer-accent">●</span>&nbsp; identity-stripped · streaming pipeline ·
+            tool-grounded
           </span>
         </footer>
       </div>
@@ -293,11 +329,13 @@ function ListenerView({
 
 function FacetWithPulls({
   facet,
+  evidence,
   threads,
   busyAny,
   onPull,
 }: {
   facet: Facet;
+  evidence: string[];
   threads: PullThread[];
   busyAny: boolean;
   onPull: (action: PullAction) => void;
@@ -318,6 +356,16 @@ function FacetWithPulls({
           </div>
         )}
         {renderFacet(facet)}
+        {evidence.length > 0 && (
+          <div className="facet-evidence">
+            <div className="facet-evidence-label">→ from corpus · agent-grounded</div>
+            {evidence.map((quote, i) => (
+              <blockquote key={i} className="facet-evidence-quote">
+                {quote}
+              </blockquote>
+            ))}
+          </div>
+        )}
         <PullActions facetId={facet.id} busyAction={busyAction} anyBusy={busyAny} onPull={onPull} />
         {threads.length > 0 && (
           <div className="pv-thread-stack">

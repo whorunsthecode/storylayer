@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { Pitch, FacetId } from '@/lib/types/pitch';
+import type { Pitch } from '@/lib/types/pitch';
 
 interface Props {
   pitch: Pitch;
-  onResolve: (selectedFacetIds: FacetId[], reasoning: string) => void;
+  onSubmit: (intent: string) => void;
+  loading?: boolean;
+  externalError?: string | null;
 }
 
 const SUGGESTIONS = [
@@ -15,28 +17,13 @@ const SUGGESTIONS = [
   'I want to know what shaped them',
 ];
 
-export function IntentOnboarding({ pitch, onResolve }: Props) {
+export function IntentOnboarding({ pitch, onSubmit, loading, externalError }: Props) {
   const [intent, setIntent] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const error = externalError ?? null;
 
-  const submit = async (text: string) => {
+  const submit = (text: string) => {
     if (!text.trim() || loading) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/listener/intent', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ pitchId: pitch.id, intent: text }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? `HTTP ${res.status}`);
-      onResolve(data.selectedFacetIds as FacetId[], data.reasoning as string);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'agent reasoning failed');
-      setLoading(false);
-    }
+    onSubmit(text);
   };
 
   return (

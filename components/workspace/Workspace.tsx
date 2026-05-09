@@ -180,6 +180,7 @@ export function Workspace() {
         archetypeReasoning: result.archetypeReasoning,
         characteristicReasoning: result.characteristicReasoning,
         facets: editedFacets,
+        redactedCorpus: result.redactedCorpus,
       };
       const res = await fetch('/api/share', {
         method: 'POST',

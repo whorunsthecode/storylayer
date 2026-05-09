@@ -114,6 +114,7 @@ export async function POST(req: Request) {
       archetypeReasoning,
       characteristicReasoning,
       facets,
+      redactedCorpus: corpus,
     };
 
     return NextResponse.json(result);
