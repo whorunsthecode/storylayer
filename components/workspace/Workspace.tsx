@@ -209,7 +209,7 @@ export function Workspace() {
         <div className="brand">
           <div className="brand-mark" />
           <div className="brand-name">
-            Pitch <em>Workspace</em>
+            Story<em>layer</em>
           </div>
         </div>
         <div className="header-status">
@@ -531,7 +531,7 @@ export function Workspace() {
       )}
 
       <footer className="footer">
-        <span>pitch.workspace · v0.2</span>
+        <span>storylayer · v0.3</span>
         <span>
           <span className="footer-accent">●</span>&nbsp; identity-stripped · component per facet ·
           gemini 2.5

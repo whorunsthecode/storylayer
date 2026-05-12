@@ -56,7 +56,7 @@ function ListenerRoot({ pitch }: { pitch: Pitch }) {
         <div className="pv-shell pv-pipeline-stage">
           <div className="pv-pipeline-header">
             <div className="pv-brand">
-              Pitch <em>·</em> {pitch.storytellerRole} → {pitch.listenerRole}
+              Story<em>layer</em> · {pitch.storytellerRole} → {pitch.listenerRole}
             </div>
             <span className="pv-pipeline-eyebrow">agent at work · live trace below</span>
           </div>
@@ -244,7 +244,7 @@ function ListenerView({
         <header className="pv-sticky-header">
           <div className="pv-header-row">
             <div className="pv-brand">
-              Pitch <em>·</em> {pitch.storytellerRole} → {pitch.listenerRole}
+              Story<em>layer</em> · {pitch.storytellerRole} → {pitch.listenerRole}
             </div>
             <div className="pv-meta">
               <span><span className="pv-meta-key">register</span>&nbsp; {REGISTER_LABEL[pitch.register]}</span>

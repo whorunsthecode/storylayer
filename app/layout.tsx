@@ -21,7 +21,7 @@ const newsreader = Newsreader({
 });
 
 export const metadata: Metadata = {
-  title: 'Pitch Workspace',
+  title: 'Storylayer',
   description: 'Tell your story through who is listening.',
 };
 
