@@ -13,6 +13,6 @@ export async function POST(req: Request) {
     id,
     createdAt: new Date().toISOString(),
   };
-  savePitch(pitch);
+  await savePitch(pitch);
   return NextResponse.json({ id, url: `/p/${id}` });
 }

@@ -11,7 +11,7 @@ export default async function PublicPitchPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const pitch = getPitch(id);
+  const pitch = await getPitch(id);
   if (!pitch) notFound();
   return <PublicPitchView pitch={pitch} />;
 }

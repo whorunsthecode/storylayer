@@ -49,7 +49,7 @@ interface Body {
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as Body;
-  const pitch = getPitch(body.pitchId);
+  const pitch = await getPitch(body.pitchId);
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream({

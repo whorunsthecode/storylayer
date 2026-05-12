@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const pitch = getPitch(body.pitchId);
+  const pitch = await getPitch(body.pitchId);
   if (!pitch) {
     return NextResponse.json({ error: 'pitch not found' }, { status: 404 });
   }
